@@ -4,7 +4,7 @@
 
 *ACM Transactions on Graphics (TOG)*. Presented at *SIGGRAPH North America 2023*.
 
-[Cheng-Kang Ted Chao, Jason Klein, Jianchao Tan, Jose Echevarria, Yotam Gingold] 
+[*By* [Cheng-Kang Ted Chao](https://mason.gmu.edu/~cchao8/), Jason Klein, [Jianchao Tan](https://scholar.google.com/citations?user=1Gywy80AAAAJ&hl=en), [Jose Echevarria](http://www.jiechevarria.com/), [Yotam Gingold](https://cragl.cs.gmu.edu/)] 
 
 
 
