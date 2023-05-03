@@ -2,9 +2,10 @@
 
 *ColorfulCurves*: Palette-Aware Lightness Control and Color Editing via Sparse Optimization
 
-Cheng-Kang Ted Chao, Jason Klein, Jianchao Tan, Jose Echevarria, Yotam Gingold 
-
 *ACM Transactions on Graphics (TOG)*. Presented at *SIGGRAPH North America 2023*.
+
+[Cheng-Kang Ted Chao, Jason Klein, Jianchao Tan, Jose Echevarria, Yotam Gingold] 
+
 
 
 
