@@ -1,5 +1,6 @@
 # ColorfulCurves
 
+## License
 
 Shield: [![CC BY 4.0][cc-by-shield]][cc-by]
 
