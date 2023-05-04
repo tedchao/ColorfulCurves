@@ -1,4 +1,4 @@
-name: sparse_edit2
+name: sparse_edit
 channels:
   - conda-forge
   - defaults
