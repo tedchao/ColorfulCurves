@@ -1,4 +1,4 @@
-name: sparse_edit
+name: sparse_edit2
 channels:
   - conda-forge
   - defaults
@@ -17,8 +17,10 @@ dependencies:
   - pip:
      - qtwidgets
      - git+https://github.com/yig/python-qtwidgets#egg=qtwidgets
+     - git+https://github.com/yig/pyqt-colorpicker
      - qtpy
      - pyside6
+     - pyqtgraph
      - torch==1.10.1
      - torchvision==0.11.2
      - torchaudio==0.10.1
