@@ -719,7 +719,7 @@ class MainWindow( QWidget ):
             '''
             
             # If the image is too large to fit on screen, shrink it.
-            MAX_WIDTH = 1300
+            MAX_WIDTH = 500
             if self.image.shape[1] > MAX_WIDTH:
                 print( f"Image wider than {MAX_WIDTH} pixels. Scaling down." )
                 print( "Old dimensions:", self.image.shape )
