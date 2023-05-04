@@ -25,6 +25,8 @@ Then:
 Launch the GUI:
 
     python GUI.py
+    
+Note: The time complexity of our algorithm is **independent** to image size; however, the GUI will crop your image if its width larger than certain size to fit on a screen. Our GUI is not implemented in a way that it can dynamically shrink or enlarge your image when changing window size.
 
 
 ## License
