@@ -9,7 +9,7 @@
 
 ## About
 
-This repo is official code release for *ColorfulCurves*.
+This repo is official code release for *ColorfulCurves*. Our editing framework allows users to (1) edit lightness (a.k.a luminance in photography communities though not mathematically equivalent) sparsely according to the representative colors in the given image (2) edit pixel's colors by directly placing image-space color constraints. *ColorfulCurves* will find a best set of representative colors and tone curves to satisfy your constraints. 
 
 ## Installation
 
