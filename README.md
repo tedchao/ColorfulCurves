@@ -11,6 +11,20 @@
 
 This repo is official code release for *ColorfulCurves*.
 
+## Installation
+
+Install [Anaconda](https://www.anaconda.com/products/individual) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
+(Miniconda is faster to install.) Choose the 64-bit Python 3.x version. Launch the Anaconda shell from the Start menu and navigate to the posterization directory.
+Then:
+
+    conda env create -f environment.yml
+    conda activate sparse_edit
+
+## Usage
+
+Launch the GUI:
+
+    python GUI.py
 
 
 ## License
