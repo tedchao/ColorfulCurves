@@ -11,7 +11,7 @@ try:
     from .aux.weights import *
     from .aux.simplepalettes import *
     
-    from .highlight_shadow_control import *
+    #from .highlight_shadow_control import *
     from .alternative_optimization import *
     #from .color_optimizer import *
     #from .lum_optimizer_scale import *
@@ -21,7 +21,7 @@ except ImportError:
     from aux.weights import *
     from aux.simplepalettes import *
     
-    from highlight_shadow_control import *
+    #from highlight_shadow_control import *
     from alternative_optimization import *
     #from color_optimizer import *
     #from lum_optimizer_scale import *
