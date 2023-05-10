@@ -1,6 +1,6 @@
 # ColorfulCurves
 
-*ColorfulCurves*: Palette-Aware Lightness Control and Color Editing via Sparse Optimization
+*ColorfulCurves*: Palette-Aware Lightness Control and Color Editing via Sparse Optimization ([paper](https://mason.gmu.edu/~cchao8/data/ColorfulCurves.pdf))
 
 *ACM Transactions on Graphics (TOG)*. Presented at *SIGGRAPH North America 2023*.
 
