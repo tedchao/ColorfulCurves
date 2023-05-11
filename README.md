@@ -6,7 +6,7 @@
 
 [*By* [Cheng-Kang Ted Chao](https://mason.gmu.edu/~cchao8/), [Jason Klein](https://www.linkedin.com/in/jason-adam-klein), [Jianchao Tan](https://scholar.google.com/citations?user=1Gywy80AAAAJ&hl=en), [Jose Echevarria](http://www.jiechevarria.com/), [Yotam Gingold](https://cragl.cs.gmu.edu/)] 
 
-See [demo video] (https://mason.gmu.edu/~cchao8/data/ColorfulCurves_demo.mp4) for our editing framework.
+See [demo video](https://mason.gmu.edu/~cchao8/data/ColorfulCurves_demo.mp4) for our editing framework.
 
 ## About
 
