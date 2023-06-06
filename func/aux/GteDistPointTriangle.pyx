@@ -1,3 +1,8 @@
+# cython: language_level=3
+# cython: boundscheck=False
+# cython: wraparound=False
+# cython: infer_types=True
+
 '''
 Ported from: http://www.geometrictools.com/GTEngine/Include/GteDistPointTriangle.h
 '''
@@ -91,7 +96,7 @@ cdef struct Result:
 
 
 
-cpdef Result DCPPointTriangle( object[Real, ndim=1, mode="c"] point_p, object[Real, ndim=2, mode="c"] triangle_p ):
+cpdef Result DCPPointTriangle( Real[::1] point_p, Real[:,::1] triangle_p ):
     '''
     Given a 3-dimensional point as a numpy.array
     and a triangle as a sequence of 3 same-dimensional points (also numpy.arrays),

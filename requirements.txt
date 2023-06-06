@@ -1,0 +1,12 @@
+scikit-image
+numpy
+scipy
+opencv-python
+pillow
+qtpy
+pyside6
+git+https://github.com/yig/python-qtwidgets
+git+https://github.com/yig/pyqt-colorpicker
+pyqtgraph
+cython
+pyopencl

@@ -279,6 +279,7 @@ class MainWindow( QWidget ):
     
     def enable_after_load( self ):
         ## The first panel includes the always-enabled Load button.
+        self.img_btn.setEnabled( False ) # Disable the load button until we reset our state properly.
         self.save_btn.setEnabled( True )
         self.save_palette_btn.setEnabled( True )
         self.save_curves_btn.setEnabled( True )
@@ -622,10 +623,6 @@ class MainWindow( QWidget ):
             print( 'Curve constraints:\n', self.constraint_curves )
             print( 'Color constraints:\n', self.constraint_colors )
             
-            print('----Check gamut:')
-            print( pick - color.rgb2lab( color.lab2rgb( pick ) ) )
-            print( color.lab2rgb( pick ) )
-            
             # change constraint information based on the type of constraints user clicks
             if self.image_cons_indicator:
                 # separate colors and luminance
@@ -658,7 +655,6 @@ class MainWindow( QWidget ):
         
         # draw updated data onto panel
         image_rgb = lab2rgb_fast( self.image )
-        print( '---reconstruted: ', image_rgb[self.changed_pixel_y, self.changed_pixel_x] )
         self.set_image( self.imageLabel, image_rgb )
         self.set_image( self.paletteLabel, palette_img )
         
@@ -772,9 +768,6 @@ class MainWindow( QWidget ):
             
             # call optimizer
             self.optimizer()
-            
-            with open('weights.npy', 'wb') as f:
-                np.save(f, self.weights)
     
     # Set image on the panels
     def set_image( self, panel, image ):
@@ -963,4 +956,3 @@ def main():
     
 if __name__ == '__main__':
     main()
-    

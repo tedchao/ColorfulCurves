@@ -79,7 +79,7 @@ def extract_weights( palette, img ):
     weights = ABXY_weights( palette, ab_pts )
     return weights
     
-def get_recon_img( palette, weights, luminance ):
+def get_recon_img_numpy( palette, weights, luminance ):
     '''
     Given: 
         `palette`: A #P-by-2 array 
@@ -95,6 +95,48 @@ def get_recon_img( palette, weights, luminance ):
     recon_img[:, :, 0] = luminance
     recon_img[:, :, 1:] = recon_ab
     return recon_img
+
+def get_recon_img_pytorch( palette, weights, luminance ):
+    '''
+    Given: 
+        `palette`: A #P-by-2 array 
+        `weights`: A N-by-#P array
+        `luminance`: A h-w-1 array of luminance
+    
+    Return:
+        `recon_img`: A reconstructed LAB image of size h-w-3 
+    '''
+    h, w = luminance.shape[0], luminance.shape[1]
+    
+    import torch
+    gpu = torch.device("mps")
+    
+    palette = torch.from_numpy( palette.astype(np.float32) ).to( gpu )
+    weights = torch.from_numpy( weights.astype(np.float32) ).to( gpu )
+    
+    recon_ab = ( weights @ palette ).numpy( force = True ).reshape( ( h, w, 2 ) )
+    recon_img = np.zeros( ( h, w, 3 ) )
+    recon_img[:, :, 0] = luminance
+    recon_img[:, :, 1:] = recon_ab
+    return recon_img
+
+def get_recon_img( *args ):
+    import time
+    start = time.time()
+    n = get_recon_img_numpy( *args )
+    print( "NumPy:", time.time() - start )
+    start = time.time()
+    p = get_recon_img_pytorch( *args )
+    print( "PyTorch:", time.time() - start )
+    print( "Max Abs Error:", np.abs( n - p ).max() )
+    return p
+
+## NumPy is 1.5x the speed of PyTorch.
+## It looks like the PyTorch spends a lot of time copying weights to the GPU (which
+## really only needs to be done once). But py-spy makes it look like the pytorch
+## version is much faster, yet time.time() disagrees. Perhaps py-spy doesn't account
+## for some GPU time?
+get_recon_img = get_recon_img_numpy
 
 def compute_new_luminance_less_grey_weights( weights ):
     '''
@@ -256,8 +298,8 @@ def curve_function_plot( L_cons, control_points ):
     L_range = pchip_interpolate( control_points[:,0], control_points[:,1], L )
     return L, L_range
 
-_lab2rgb_fast_LUT = None
-def lab2rgb_fast( lab ):
+_lab2rgb_LUT_numpy = None
+def lab2rgb_LUT_numpy( lab ):
     """
     Given:
         lab: An image in CIE Lab format. The last dimension must be 3 (Lab), with L in the range [0,100], ab in the range [-128,127]^2.
@@ -265,20 +307,18 @@ def lab2rgb_fast( lab ):
         rgb: An image with the same dimensions as `lab` in RGB space.
     """
     
+    # start = time.time()
     L_res = a_res = b_res = 256
     
     ## Our precomputed look-up table.
-    global _lab2rgb_fast_LUT
-    if _lab2rgb_fast_LUT is None:
+    global _lab2rgb_LUT_numpy
+    if _lab2rgb_LUT_numpy is None:
         ## Create it the first time.
         labcube = np.zeros( (L_res,a_res,b_res,3), dtype = float )
         labcube[:,:,:,0] = np.linspace(0,100,L_res)[:,None,None]
         labcube[:,:,:,1] = np.linspace(-128,127,a_res)[None,:,None]
         labcube[:,:,:,2] = np.linspace(-128,127,b_res)[None,None,:]
-        _lab2rgb_fast_LUT = color.lab2rgb( labcube )
-    
-    #import time
-    #start = time.time()
+        _lab2rgb_LUT_numpy = color.lab2rgb( labcube )
     
     ## 1. Flatten lab into a #pixel-by-3 array
     #lab_indices = lab.copy().reshape(-1,3)
@@ -291,25 +331,52 @@ def lab2rgb_fast( lab ):
     #lab_indices = lab_indices.astype(int)
     #np.clip( lab_indices, 0, (L_res-1,a_res-1,b_res-1), out = lab_indices )
     ## 5. Look up the values.
-    #rgb = _lab2rgb_fast_LUT[ tuple( lab_indices.T ) ]
+    #rgb = _lab2rgb_LUT_numpy[ tuple( lab_indices.T ) ]
     ## 6. Restore the input shape.
     
     #print( "fast conversion 1 took:", time.time() - start )
     #start = time.time()
     
     ## As a one-liner (a touch faster for some reason):
-    rgb = _lab2rgb_fast_LUT[ tuple( ( ( lab.reshape( -1, 3 ) + np.array((0,128,128))[...,:] )*np.array(((L_res-1)/100,(a_res-1)/255,(b_res-1)/255))[...,:] ).round().astype(int).clip(0,(L_res-1,a_res-1,b_res-1)).T ) ]
+    rgb = _lab2rgb_LUT_numpy[ tuple( ( ( lab.reshape( -1, 3 ) + np.array((0,128,128))[...,:] )*np.array(((L_res-1)/100,(a_res-1)/255,(b_res-1)/255))[...,:] ).round().astype(int).clip(0,(L_res-1,a_res-1,b_res-1)).T ) ]
     #print( "fast conversion 2 took:", time.time() - start )
     
     rgb.shape = lab.shape
     
-    # print( "fast conversion took:", time.time() - start )
+    #print( "fast conversion took:", time.time() - start )
     
     #start = time.time()
     #rgb_slow = color.lab2rgb( lab )
     #print( "skimage conversion took:", time.time() - start )
     
     ## Always ~1/255
-    #print( "lab2rgb diff:", np.abs( rgb_slow - rgb ).sum(axis=-1).max() )
+    #print( "lab2rgb diff:", np.abs( rgb_pytorch - rgb ).sum(axis=-1).max() )
     
     return rgb
+
+
+lab2rgb_LUT_pytorch = lab2rgb_LUT_numpy
+try:
+    from . import lab2rgb_pytorch
+    lab2rgb_LUT_pytorch = lab2rgb_pytorch.lab2rgb_LUT_pytorch
+    
+    ## PyTorch is faster than NumPy. See `performance_lab2rgb.py`
+    print( "Using PyTorch lab2rgb" )
+    lab2rgb_fast = lab2rgb_LUT_pytorch
+except ImportError:
+    print( "No PyTorch with Metal backend found. Try one of:" )
+    print( "conda install pytorch torchvision torchaudio -c pytorch-nightly" )
+    print( "pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu" )
+
+
+lab2rgb_LUT_opencl = lab2rgb_LUT_numpy
+try:
+    from . import lab2rgb_opencl
+    lab2rgb_LUT_opencl = lab2rgb_opencl.prepare_OpenCL_lab2rgb()[0]
+    
+    ## PyOpenCL is faster than PyTorch. See `performance_lab2rgb.py`
+    print( "Using OpenCL lab2rgb" )
+    lab2rgb_fast = lab2rgb_LUT_opencl
+except ImportError:
+    print( "No PyOpenCL. Try:" )
+    print( "pip install pyopencl" )

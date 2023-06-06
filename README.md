@@ -18,20 +18,44 @@ Our editing framework allows users to:
 
 ## Installation
 
+You can install dependencies using either `conda` or `pip`.
+
+### Conda
+
 Install [Anaconda](https://www.anaconda.com/products/individual) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
-(Miniconda is faster to install.) Choose the 64-bit Python 3.x version. Launch the Anaconda shell from the Start menu and navigate to the posterization directory.
+(Miniconda is faster to install.) Choose the 64-bit Python 3.x version. Launch the Anaconda shell from the Start menu and navigate to this directory.
 Then:
 
     conda env create -f environment.yml
-    conda activate sparse_edit
+    conda activate colorfulcurves
+
+To update an already created environment if the `environment.yml` file changes, first activate and then run `conda env update --file environment.yml --prune`.
+
+### Pip
+
+(Optional) Create a virtual environment:
+
+    python3 -m venv .venv
+    source .venv/bin/activate
+
+Install dependencies:
+
+    pip install -r requirements.txt
+
+(untested) If you want to install the exact version of the dependencies we used, run: `pip install -r requirements.frozen.txt`
+
+### (Optional) Compile Cython
+
+After setting up the environment, you can compile the Cython file with `cythonize -i func/aux/GteDistPointTriangle.pyx`. If you don't, it will happen automatically when you launch the GUI.
+
 
 ## Usage
 
 Launch the GUI:
 
-    python GUI.py
-    
-Note: The time complexity of our algorithm is **independent** to image size; however, the GUI will crop your image if its width is larger than certain size to fit itself properly to the screen. Our GUI is not implemented in a way that it can dynamically shrink or enlarge your image when changing window size.
+    python3 GUI.py
+
+Note: The time complexity of our algorithm is **independent** of image size; however, the GUI will resize your image if its width is larger than a certain size to fit itself properly onscreen. A better implementation would operate on the full size image and just show a downsampled version.
 
 
 ## License

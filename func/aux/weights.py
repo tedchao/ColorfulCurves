@@ -3,7 +3,7 @@ from scipy.spatial import ConvexHull, Delaunay
 from scipy.sparse import coo_matrix
 
 import pyximport
-pyximport.install(reload_support=True)
+pyximport.install()
 from .GteDistPointTriangle import *
 import warnings
 warnings.filterwarnings("ignore")
