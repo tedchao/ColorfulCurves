@@ -1,6 +1,6 @@
 # ColorfulCurves
 
-*ColorfulCurves*: Palette-Aware Lightness Control and Color Editing via Sparse Optimization ([paper]([https://mason.gmu.edu/~cchao8/data/ColorfulCurves.pdf](https://cragl.cs.gmu.edu/colorfulcurves/ColorfulCurves-%20Palette-Aware%20Lightness%20Control%20and%20Color%20Editing%20via%20Sparse%20Optimization%20(Cheng-Kang%20Ted%20Chao,%20Jason%20Klein,%20Jianchao%20Tan,%20Jose%20Echevarria,%20Yotam%20Gingold%202023%20SIGGRAPH)%20small.pdf)))
+*ColorfulCurves*: Palette-Aware Lightness Control and Color Editing via Sparse Optimization ([paper]([https://cragl.cs.gmu.edu/colorfulcurves/ColorfulCurves-%20Palette-Aware%20Lightness%20Control%20and%20Color%20Editing%20via%20Sparse%20Optimization%20(Cheng-Kang%20Ted%20Chao,%20Jason%20Klein,%20Jianchao%20Tan,%20Jose%20Echevarria,%20Yotam%20Gingold%202023%20SIGGRAPH)%20small.pdf])
 
 *ACM Transactions on Graphics (TOG)*. Presented at *SIGGRAPH North America 2023*.
 
