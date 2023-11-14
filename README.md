@@ -57,6 +57,8 @@ Launch the GUI:
 
 Note: The time complexity of our algorithm is **independent** of image size; however, the GUI will resize your image if its width is larger than a certain size to fit itself properly onscreen. A better implementation would operate on the full size image and just show a downsampled version.
 
+New (11.13.2023): The GUI now supports zoom in/out. To do this, toggle the switch to ON in the zoom in/out box and click on random pixel. Then, use the slider to control the magnitude of the scale. Toggling the switch to OFF allows you to add image constraints by clicking on pixels again.
+
 
 ## License
 
