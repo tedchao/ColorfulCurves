@@ -309,7 +309,7 @@ class MainWindow( QWidget ):
         grid.addWidget( self.paletteLabel, 0, 2, 5, 1 )
         grid.addWidget( self.curvefunction, 0, 3, 5, 1 )
         ## Row 4 can stretch.
-        grid.setRowStretch( 4, 1 )
+        grid.setRowStretch( 5, 1 )
         
         self.setLayout(grid)
         self.show()
