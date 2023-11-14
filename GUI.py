@@ -448,22 +448,22 @@ class MainWindow( QWidget ):
         qp = QPainter( pixmap )
         for loc in self.constraint_locs:
             # map global coordinate to local coordinate
-            x, y = int(loc[1]-y+int(y/ratio)), int(loc[0]-x+int(x/ratio))
+            x_pen, y_pen = int(loc[1]-y+int(y/ratio)), int(loc[0]-x+int(x/ratio))
             
             # black outer
             pen = QPen( Qt.black, 2 )
             qp.setPen( pen )
-            qp.drawEllipse(x-2, y-2, 10, 10)
+            qp.drawEllipse(x_pen-2, y_pen-2, 10, 10)
             
             # white filler
             pen = QPen( Qt.white, 2 )
             qp.setPen( pen )
-            qp.drawEllipse(x, y, 6, 6)
+            qp.drawEllipse(x_pen, y_pen, 6, 6)
             
             # black interior
             pen = QPen( Qt.black, 2 )
             qp.setPen( pen )
-            qp.drawEllipse(x+2,y+2, 2, 2)
+            qp.drawEllipse(x_pen+2,y_pen+2, 2, 2)
             
         qp.end()
         
@@ -806,9 +806,6 @@ class MainWindow( QWidget ):
                 print( "New dimensions:", self.image.shape )
             '''
             
-            self.image_height = self.image.shape[0]
-            self.image_width = self.image.shape[1]
-            
             # If the image is too large to fit on screen, shrink it.
             MAX_WIDTH = 500
             if self.image.shape[1] > MAX_WIDTH:
@@ -816,14 +813,15 @@ class MainWindow( QWidget ):
                 print( "Old dimensions:", self.image.shape )
                 scale = MAX_WIDTH/self.image.shape[1]
                 self.image = skimage.transform.resize( self.image, ( scale * self.image.shape[0], MAX_WIDTH ) )
-                self.image_height = self.image.shape[0]
-                self.image_width = self.image.shape[1]
                 print( "New dimensions:", self.image.shape )
                 
                 print( "Save cropped version." )
                 self.imagePath = path
                 self.save_image( 1 )
-                
+            
+            self.image_height = self.image.shape[0]
+            self.image_width = self.image.shape[1]
+            
             og = self.image
             self.imagePath = path
             self.L0 = self.image[:, :, 0]
