@@ -7,6 +7,7 @@ import cv2
 from qtpy.QtCore import *
 from qtpy.QtGui import *
 from qtpy.QtWidgets import *
+from qtwidgets import Toggle
 
 from labcolorpicker import getColor, ColorPicker, useLightTheme
 
@@ -71,6 +72,11 @@ class MainWindow( QWidget ):
         self.L0 = None
         self.N = 100    # number of discrete points needed to evaluate bilaplacian
         
+        self.image_height = 0
+        self.image_width = 0
+        self.ratio = 0
+        self.toggle_status = False
+        
         self.palette_num = 4
         
         self.palette = None
@@ -125,7 +131,13 @@ class MainWindow( QWidget ):
         # image label
         self.imageLabel_test = QLabel()
         self.imageLabel = QLabel()
+        self.imageLabel.setScaledContents(True)
+        #self.imageLabel.setSizePolicy(QSizePolicy.Ignored,QSizePolicy.Ignored)
         self.makeClickable_img( self.imageLabel )
+        
+        #self.scrollArea = QScrollArea()
+        #self.scrollArea.setBackgroundRole(QPalette.Dark)
+        #self.scrollArea.setWidget( self.imageLabel )
         
         # palette label
         self.paletteLabel = QLabel()
@@ -159,6 +171,8 @@ class MainWindow( QWidget ):
         
         self.combo_curve_box = QVBoxLayout()
         self.reset_btn_box = QVBoxLayout()
+        
+        self.zoom_box = QVBoxLayout()
     
     def buttons( self ):
         def set_button_utils( button, func, text, width ):
@@ -200,6 +214,20 @@ class MainWindow( QWidget ):
         self.undo_all_btn = QPushButton( 'Reset Everything' )
         set_button_utils( self.undo_all_btn, self.reset_all, 'Press the button to <b>undo</b> your all previous edits', (130,) )
         
+        ## auxs for zoom in/out
+        self.zoom_toggle = Toggle()
+        self.zoom_toggle.setMaximumWidth( 80 )
+        self.zoom_toggle.toggled.connect(self.zoom_toggle_val)
+        
+        self.zoom_slider = QSlider(Qt.Horizontal)
+        self.zoom_slider.valueChanged.connect(self.zoom_slider_scale)
+        self.zoom_slider.setFocusPolicy(Qt.StrongFocus)
+        self.zoom_slider.setTickPosition(QSlider.TicksBothSides)
+        self.zoom_slider.setMinimum(0)
+        self.zoom_slider.setMaximum(50)
+        self.zoom_slider.setTickInterval(5)
+        self.zoom_slider.setSingleStep(1)
+        
     def separated_lines( self ):
         self.line1 = QFrame()
         self.line1.setFrameShape( QFrame.HLine )
@@ -235,6 +263,9 @@ class MainWindow( QWidget ):
         # reset palette
         self.reset_btn_box.addWidget( self.bake_btn )
         self.reset_btn_box.addWidget( self.undo_all_btn )
+        
+        self.zoom_box.addWidget( self.zoom_toggle )
+        self.zoom_box.addWidget( self.zoom_slider )
     
     def layout_setup( self ):
         # Set grid layout
@@ -267,6 +298,12 @@ class MainWindow( QWidget ):
         self.reset_btn_group.setEnabled( False )
         grid.addWidget( self.reset_btn_group, 3, 0 )
         
+        ### Reset and Bake
+        self.zoom_group = QGroupBox( "Zoom In/Out" )
+        self.zoom_group.setLayout( self.zoom_box )
+        self.zoom_group.setEnabled( False )
+        grid.addWidget( self.zoom_group, 4, 0 )
+        
         ## Add the images
         grid.addWidget( self.imageLabel, 0, 1, 5, 1, Qt.AlignTop )
         grid.addWidget( self.paletteLabel, 0, 2, 5, 1 )
@@ -288,6 +325,10 @@ class MainWindow( QWidget ):
         # self.selected_constraint_widgets.setEnabled( True )
         self.curve_group.setEnabled( True )
         self.reset_btn_group.setEnabled( True )
+        
+        ## Open up slider only if Toggle is True
+        self.zoom_group.setEnabled( True )
+        self.zoom_slider.setEnabled( False )
 
     ##########################################################################################
     ##############  reset functions  ############################
@@ -381,6 +422,55 @@ class MainWindow( QWidget ):
     ##############  Clickable panels  ############################
     ##########################################################################################
     
+    def zoom_toggle_val( self, state ):
+        self.toggle_status = state # save a copy for other functions
+        if state:
+            self.zoom_slider.setEnabled( True )
+        else:
+            self.zoom_slider.setEnabled( False )
+    
+    def zoom_slider_scale( self ):
+        # set proper zoom ratio
+        ratio = self.zoom_slider.value()
+        ratio = 1 + 7*(ratio/50)
+        h = self.image_height
+        w = self.image_width
+        
+        # zoom at the clicked position
+        y = self.changed_pixel_x
+        x = self.changed_pixel_y
+        image = lab2rgb_fast(self.image)
+        scaled_image = image[x-int(x/ratio):x+int((h-x)/ratio), y-int(y/ratio):y+int((w-y)/ratio)]
+        
+        test = np.asarray( ( scaled_image*255. ).round().clip( 0, 255 ).astype( np.uint8 ) )
+        pixmap = QPixmap( QImage( test.data, test.shape[1], test.shape[0], 3 * test.shape[1], QImage.Format_RGB888 ) )
+        
+        qp = QPainter( pixmap )
+        for loc in self.constraint_locs:
+            # map global coordinate to local coordinate
+            x, y = int(loc[1]-y+int(y/ratio)), int(loc[0]-x+int(x/ratio))
+            
+            # black outer
+            pen = QPen( Qt.black, 2 )
+            qp.setPen( pen )
+            qp.drawEllipse(x-2, y-2, 10, 10)
+            
+            # white filler
+            pen = QPen( Qt.white, 2 )
+            qp.setPen( pen )
+            qp.drawEllipse(x, y, 6, 6)
+            
+            # black interior
+            pen = QPen( Qt.black, 2 )
+            qp.setPen( pen )
+            qp.drawEllipse(x+2,y+2, 2, 2)
+            
+        qp.end()
+        
+        newPixmap = pixmap.scaledToWidth(self.image_width)
+        self.imageLabel.setPixmap( newPixmap )
+        self.imageLabel.repaint()
+    
     ### for direct curve manipulation
     def manipulate_curve( self, text ):
         self.curve_palette_indx = int( text )
@@ -392,59 +482,61 @@ class MainWindow( QWidget ):
             self.changed_pixel_x = int( evnt.position().x() )
             self.changed_pixel_y = int( evnt.position().y() )
             
-            # if we click on same constraint, just display it
-            self.pixel_ind = self.check_if_click_on_constraint()
-            if self.pixel_ind != -1:
-                lum = self.constraint_lums[ self.pixel_ind ][1]
-                color_ab = self.constraint_colors[ self.pixel_ind ]
-                color_lab = np.array( [lum, color_ab[0], color_ab[1]] )
-                color_rgb = ( lab2rgb_fast( color_lab ) * 255. ).clip( 0, 255 ).astype( np.uint8 )
-            
-            # otherwise, we add new constraint
-            else:
-                lum = self.L0[ self.changed_pixel_y, self.changed_pixel_x ] # always use original L0 to map luminance
-                lum_ = self.image[:, :, 0][ self.changed_pixel_y, self.changed_pixel_x ] # always use the updated luminance
+            # run the optimization only when not in the zoom mode
+            if self.toggle_status is False:
+                # if we click on same constraint, just display it
+                self.pixel_ind = self.check_if_click_on_constraint()
+                if self.pixel_ind != -1:
+                    lum = self.constraint_lums[ self.pixel_ind ][1]
+                    color_ab = self.constraint_colors[ self.pixel_ind ]
+                    color_lab = np.array( [lum, color_ab[0], color_ab[1]] )
+                    color_rgb = ( lab2rgb_fast( color_lab ) * 255. ).clip( 0, 255 ).astype( np.uint8 )
                 
-                color_lab = self.image[ self.changed_pixel_y, self.changed_pixel_x ]
-                color_rgb = ( lab2rgb_fast( color_lab ) * 255. ).round().clip( 0, 255 ).astype( np.uint8 )
+                # otherwise, we add new constraint
+                else:
+                    lum = self.L0[ self.changed_pixel_y, self.changed_pixel_x ] # always use original L0 to map luminance
+                    lum_ = self.image[:, :, 0][ self.changed_pixel_y, self.changed_pixel_x ] # always use the updated luminance
+                    
+                    color_lab = self.image[ self.changed_pixel_y, self.changed_pixel_x ]
+                    color_rgb = ( lab2rgb_fast( color_lab ) * 255. ).round().clip( 0, 255 ).astype( np.uint8 )
+                    
+                    W = self.weights.reshape( ( self.image.shape[0], self.image.shape[1], self.palette.shape[0] ) )
+                    w_at_pixel = W[ self.changed_pixel_y, self.changed_pixel_x ]
+                    
+                    # add all constraint information
+                    #self.constraint_lums.append( color_lab[0] )
+                    self.constraint_lums.append( [lum, lum_] )
+                    self.constraint_locs.append( (self.changed_pixel_y, self.changed_pixel_x) )
+                    self.constraint_colors.append( color_lab[1:] )
+                    self.constraint_weights.append( w_at_pixel )
+                    
+                    print( '\n -- Constraint info: ')
+                    print( 'Add luminance constraints:\n', (lum, lum_) )
+                    
+                    # call optimizer
+                    self.optimizer()
                 
-                W = self.weights.reshape( ( self.image.shape[0], self.image.shape[1], self.palette.shape[0] ) )
-                w_at_pixel = W[ self.changed_pixel_y, self.changed_pixel_x ]
+                self.cur_color_rgb = color_rgb
+                self.cur_color_lab = color_lab
                 
-                # add all constraint information
-                #self.constraint_lums.append( color_lab[0] )
-                self.constraint_lums.append( [lum, lum_] )
-                self.constraint_locs.append( (self.changed_pixel_y, self.changed_pixel_x) )
-                self.constraint_colors.append( color_lab[1:] )
-                self.constraint_weights.append( w_at_pixel )
+                # change flag of indicating adding palette constraint or image-space constraint or luminance constraint
+                self.palette_cons_indicator = False
+                self.image_cons_indicator = True
+                self.lum_cons_indicator = False
+                # enable gui
+                self.selected_constraint_widgets.setEnabled( True )
                 
-                print( '\n -- Constraint info: ')
-                print( 'Add luminance constraints:\n', (lum, lum_) )
+                # display
+                print( '\n -- Click info: ')
+                print( 'selected color (LAB): ', color_lab )
+                print( 'selected color (RGB): ', color_rgb )
                 
-                # call optimizer
-                self.optimizer()
-            
-            self.cur_color_rgb = color_rgb
-            self.cur_color_lab = color_lab
-            
-            # change flag of indicating adding palette constraint or image-space constraint or luminance constraint
-            self.palette_cons_indicator = False
-            self.image_cons_indicator = True
-            self.lum_cons_indicator = False
-            # enable gui
-            self.selected_constraint_widgets.setEnabled( True )
-            
-            # display
-            print( '\n -- Click info: ')
-            print( 'selected color (LAB): ', color_lab )
-            print( 'selected color (RGB): ', color_rgb )
-            
-            # change visualization of pixel labels (both selected and changed)
-            color_str = '#%02x%02x%02x' % ( color_rgb[0], color_rgb[1], color_rgb[2] )
-            self.pixelLabel_selected.setStyleSheet( "background-color: " + color_str ) 
-            self.pixelLabel_changed.setStyleSheet( "background-color: " + color_str ) 
-            
-            self.update_image_panel( lab2rgb_fast( self.image ) )
+                # change visualization of pixel labels (both selected and changed)
+                color_str = '#%02x%02x%02x' % ( color_rgb[0], color_rgb[1], color_rgb[2] )
+                self.pixelLabel_selected.setStyleSheet( "background-color: " + color_str ) 
+                self.pixelLabel_changed.setStyleSheet( "background-color: " + color_str ) 
+                
+                self.update_image_panel( lab2rgb_fast( self.image ) )
             
         widget.emit( SIGNAL( 'clicked()' ) )
         widget.mousePressEvent = lambda evnt: SendClickSignal( widget, evnt )
@@ -714,6 +806,9 @@ class MainWindow( QWidget ):
                 print( "New dimensions:", self.image.shape )
             '''
             
+            self.image_height = self.image.shape[0]
+            self.image_width = self.image.shape[1]
+            
             # If the image is too large to fit on screen, shrink it.
             MAX_WIDTH = 500
             if self.image.shape[1] > MAX_WIDTH:
@@ -721,6 +816,8 @@ class MainWindow( QWidget ):
                 print( "Old dimensions:", self.image.shape )
                 scale = MAX_WIDTH/self.image.shape[1]
                 self.image = skimage.transform.resize( self.image, ( scale * self.image.shape[0], MAX_WIDTH ) )
+                self.image_height = self.image.shape[0]
+                self.image_width = self.image.shape[1]
                 print( "New dimensions:", self.image.shape )
                 
                 print( "Save cropped version." )
@@ -956,3 +1053,4 @@ def main():
     
 if __name__ == '__main__':
     main()
+    
